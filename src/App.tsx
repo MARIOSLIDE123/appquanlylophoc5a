@@ -34,6 +34,7 @@ import { generateStudentReport } from "./services/reportGenerator";
 import { generateWeeklyHonorSlide } from "./services/presentationGenerator";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import { analyzeDataWithAI } from "./services/aiService";
+import { parseUploadedFile } from "./services/fileUploadService";
 
 export default function App() {
   // Application state
@@ -397,10 +398,34 @@ Yêu cầu:
       } else {
         alert("Không tìm thấy học sinh nào. Vui lòng kiểm tra lại cấu trúc bảng tính.");
       }
-    } catch (error) {
-      alert("Lỗi khi tải dữ liệu. Vui lòng đảm bảo link là định dạng CSV (Publish to the web).");
+    } catch (error: any) {
+      alert(`Lỗi khi tải dữ liệu: ${error.message}`);
     } finally {
       setIsFetchingSheet(false);
+    }
+  };
+
+  // Xử lý tải file từ máy tính (CSV, Word, TXT)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsFetchingSheet(true);
+    try {
+      const newStudents = await parseUploadedFile(file, geminiApiKey, selectedModel);
+      if (newStudents.length > 0) {
+        setStudents(newStudents);
+        setSelectedStudentId(newStudents[0].id);
+        showToast(`✅ Đã tải thành công ${newStudents.length} học sinh từ file "${file.name}"!`);
+      } else {
+        alert("Không tìm thấy học sinh nào trong file. Vui lòng kiểm tra nội dung file.");
+      }
+    } catch (error: any) {
+      alert(`Lỗi khi đọc file: ${error.message}`);
+    } finally {
+      setIsFetchingSheet(false);
+      // Reset input để cho phép chọn lại cùng file
+      e.target.value = "";
     }
   };
 
@@ -566,8 +591,24 @@ Yêu cầu:
                   Tải dữ liệu
                 </button>
               </div>
+
+              {/* Nút tải file trực tiếp */}
+              <div className="flex items-center gap-2">
+                <label className="flex-1 cursor-pointer bg-white hover:bg-emerald-50 border border-dashed border-emerald-300 rounded-lg px-3 py-2 text-xs text-emerald-700 font-semibold text-center flex items-center justify-center gap-1.5 transition-colors">
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  Tải file từ máy (CSV, Word, TXT)
+                  <input
+                    type="file"
+                    accept=".csv,.txt,.docx,.doc,.xlsx"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={isFetchingSheet}
+                  />
+                </label>
+              </div>
+
               <p className="text-[10px] text-indigo-500/80 font-mono italic">
-                * Mẹo: Vào Google Sheets {'->'} Tệp {'->'} Chia sẻ {'->'} Công bố lên web {'->'} Định dạng CSV
+                * Google Sheets: Tệp {'→'} Chia sẻ {'→'} Công bố lên web {'→'} CSV | Hoặc tải file Word/CSV trực tiếp
               </p>
             </div>
 
