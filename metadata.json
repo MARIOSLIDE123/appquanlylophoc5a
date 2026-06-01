@@ -1,0 +1,6 @@
+{
+  "name": "Smart Classroom Ecosystem Architect",
+  "description": "An interactive digital educational workspace that integrates gamification (merit/demerit), FaceID-simulation attendance, voice-noting, and Gemini-powered predictive analytics for classroom insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
